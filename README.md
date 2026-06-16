@@ -22,6 +22,12 @@ Una aplicación web moderna y de alto rendimiento construida con **Python Flask,
    - Contador de caracteres dinámico (anillo de progreso circular que cambia de color de verde a amarillo y rojo).
    - Ajuste inteligente y automático de longitud para que quepa en los 280 caracteres recomendados.
    - Conexión oficial y directa con el Web Intent de Twitter (`https://twitter.com/intent/tweet`) para publicar sin necesidad de configurar APIs o credenciales complejas de desarrollador.
+6. **Copiar al Portapapeles (Visual Feedback)**:
+   - Copia instantánea al portapapeles del texto depurado de cualquier actualización.
+   - Animación de confirmación que cambia temporalmente el botón a color verde con un indicador de "Copiado".
+7. **Exportador Inteligente a CSV**:
+   - Exporta a un archivo CSV las actualizaciones cargadas, respetando en tiempo real tus filtros de tipo y búsqueda activa en pantalla.
+   - Formateado RFC 4180 que inyecta una firma UTF-8 BOM (`\uFEFF`) para compatibilidad directa con acentos al abrirse en Microsoft Excel.
 
 ---
 
