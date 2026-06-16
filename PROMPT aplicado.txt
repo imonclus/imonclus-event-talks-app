@@ -1,5 +1,0 @@
-Por favor, crea una aplicación web con Python Flask, HTML, JavaScript y CSS estándar que obtenga las notas de la versión de BigQuery (https://docs.cloud.google.com/feeds/bigquery-release-notes.xml) y me las muestre.
-
-Un simple botón de actualización con un indicador de carga sería suficiente para actualizar la información cuando quiera.
-
-También me gustaría poder seleccionar cualquier actualización y publicarla en Twitter.

@@ -41,3 +41,6 @@ config.py
 *.log
 *.sqlite
 *.db
+
+# Application specific files to ignore
+PROMPT aplicado.txt
