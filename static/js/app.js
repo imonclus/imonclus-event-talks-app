@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Application State
     let allReleases = [];
+    let currentFilteredReleases = [];
     let activeFilters = {
         search: '',
         type: 'all',
@@ -9,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // DOM Elements
     const btnRefresh = document.getElementById('btn-refresh');
+    const btnExportCsv = document.getElementById('btn-export-csv');
     const btnInitialLoad = document.getElementById('btn-initial-load');
     const btnRetryLoad = document.getElementById('btn-retry-load');
     const searchInput = document.getElementById('search-input');
@@ -37,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial Event Listeners
     btnRefresh.addEventListener('click', fetchReleases);
+    btnExportCsv.addEventListener('click', exportToCSV);
     btnInitialLoad.addEventListener('click', fetchReleases);
     btnRetryLoad.addEventListener('click', fetchReleases);
 
@@ -102,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.status === 'success') {
                 allReleases = result.data;
                 hideLoadingState();
+                btnExportCsv.classList.remove('hidden'); // Show export button
                 applyFiltersAndRender();
             } else {
                 showErrorState(result.message || 'Error fetching release notes.');
@@ -118,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnRefresh.disabled = true;
         btnRefresh.querySelector('.btn-text').classList.add('hidden');
         btnRefresh.querySelector('.btn-loader').classList.remove('hidden');
+        btnExportCsv.classList.add('hidden'); // Hide export button during loading
         
         feedStatus.classList.add('hidden');
         errorStatus.classList.add('hidden');
@@ -142,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorStatus.classList.remove('hidden');
         releasesList.classList.add('hidden');
         statsBar.classList.add('hidden');
+        btnExportCsv.classList.add('hidden'); // Hide export button in error state
     }
 
     // Core Filtering and Sorting Logic
@@ -150,6 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
             feedStatus.classList.remove('hidden');
             releasesList.classList.add('hidden');
             statsBar.classList.add('hidden');
+            btnExportCsv.classList.add('hidden');
+            currentFilteredReleases = [];
             return;
         }
 
@@ -194,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 a.date.localeCompare(b.date);
         });
 
+        currentFilteredReleases = filteredData;
         renderStats(totalCount);
         renderReleases(filteredData);
     }
@@ -273,7 +282,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="type-badge ${typeClass}">
                                 <i class="fa-solid ${getIconForType(update.type)}"></i> ${update.type}
                             </span>
-                            <div class="update-actions">
+                            <div class="update-actions" style="display: flex; gap: 0.5rem;">
+                                <button class="btn-copy-clipboard" 
+                                    data-text="${encodeURIComponent(update.content_text)}">
+                                    <i class="fa-regular fa-copy"></i> Copiar
+                                </button>
                                 <button class="btn-share-twitter" 
                                     data-date="${release.date}" 
                                     data-type="${update.type}" 
@@ -308,9 +321,12 @@ document.addEventListener('DOMContentLoaded', () => {
             releasesList.appendChild(card);
         });
 
-        // Add event listeners to newly rendered twitter buttons
+        // Add event listeners to newly rendered buttons
         document.querySelectorAll('.btn-share-twitter').forEach(btn => {
             btn.addEventListener('click', openTwitterComposer);
+        });
+        document.querySelectorAll('.btn-copy-clipboard').forEach(btn => {
+            btn.addEventListener('click', copyToClipboard);
         });
     }
 
@@ -450,5 +466,84 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSendTweet.style.opacity = '1';
             btnSendTweet.style.cursor = 'pointer';
         }
+    }
+
+    // Utility: Copy card description to Clipboard with visual feedback
+    async function copyToClipboard(e) {
+        const btn = e.currentTarget;
+        const text = decodeURIComponent(btn.getAttribute('data-text'));
+        
+        try {
+            await navigator.clipboard.writeText(text);
+            
+            // Visual feedback
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-check" style="color: #34d399;"></i> Copiado`;
+            btn.style.borderColor = '#34d399';
+            btn.style.color = '#34d399';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.borderColor = '';
+                btn.style.color = '';
+            }, 1500);
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+            alert('No se pudo copiar el texto. Inténtalo de nuevo o dale permisos al navegador.');
+        }
+    }
+
+    // Utility: Export currently filtered releases list to CSV
+    function exportToCSV() {
+        if (currentFilteredReleases.length === 0) {
+            alert('No hay notas de versión para exportar en este momento.');
+            return;
+        }
+        
+        // CSV Header
+        let csvContent = "Fecha,Tipo de Actualizacion,Detalles,Enlace GCP\r\n";
+        
+        // Populate rows
+        currentFilteredReleases.forEach(release => {
+            const date = release.date;
+            const link = release.link || 'https://cloud.google.com/bigquery/docs/release-notes';
+            
+            release.updates.forEach(update => {
+                const type = update.type;
+                const text = update.content_text;
+                
+                // Helper to escape values for RFC 4180 CSV compliance
+                const escapeCSV = (str) => {
+                    if (!str) return '""';
+                    const escaped = str.replace(/"/g, '""');
+                    return `"${escaped}"`;
+                };
+                
+                csvContent += `${escapeCSV(date)},${escapeCSV(type)},${escapeCSV(text)},${escapeCSV(link)}\r\n`;
+            });
+        });
+        
+        // Add UTF-8 BOM byte sequence so MS Excel opens accented characters correctly
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        
+        // Set dynamic filename according to active filters
+        let filename = "bigquery_release_notes";
+        if (activeFilters.type !== 'all') {
+            filename += `_${activeFilters.type.toLowerCase()}`;
+        }
+        if (activeFilters.search) {
+            const cleanSearch = activeFilters.search.substring(0, 15).replace(/[^a-z0-9]/gi, '_');
+            filename += `_search_${cleanSearch}`;
+        }
+        filename += ".csv";
+        
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 });

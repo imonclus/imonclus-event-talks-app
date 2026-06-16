@@ -32,7 +32,10 @@
                     <p>Track, Filter & Share Updates</p>
                 </div>
             </div>
-            <div class="header-actions">
+            <div class="header-actions" style="display: flex; gap: 0.75rem;">
+                <button id="btn-export-csv" class="btn-secondary hidden" aria-label="Exportar notas de versión a CSV">
+                    <i class="fa-solid fa-file-csv"></i> <span class="export-text">Exportar CSV</span>
+                </button>
                 <button id="btn-refresh" class="btn-primary" aria-label="Actualizar notas de versión">
                     <span class="btn-text"><i class="fa-solid fa-rotate"></i> Actualizar</span>
                     <span class="btn-loader hidden">
