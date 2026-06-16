@@ -1,0 +1,43 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+bin/
+lib/
+include/
+share/
+pyvenv.cfg
+
+# Python Cache & Compiled Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# IDE & Editor Specific Files
+.project
+.pydevproject
+.classpath
+.settings/
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*~
+
+# Environment Variables & Local Configs
+.env
+.flaskenv
+instance/
+config.py
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
