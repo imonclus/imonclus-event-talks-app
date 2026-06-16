@@ -546,4 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
         document.body.removeChild(link);
     }
+
+    // Auto-trigger release notes fetch on initial page load (UX Improvement)
+    fetchReleases();
 });

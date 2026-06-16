@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import xml.etree.ElementTree as ET
 import requests
 from flask import Flask, jsonify, render_template, request
@@ -7,6 +8,11 @@ from flask import Flask, jsonify, render_template, request
 app = Flask(__name__)
 
 FEED_URL = "https://docs.cloud.google.com/feeds/bigquery-release-notes.xml"
+
+# Cache configuration
+cached_releases = None
+last_fetched_time = 0
+CACHE_EXPIRATION_SECONDS = 900  # 15 minutes (900 seconds)
 
 def clean_html_tags(html_content):
     """Removes HTML tags and cleans up whitespace to create plain text."""
@@ -103,6 +109,19 @@ def index():
 
 @app.route('/api/releases')
 def get_releases():
+    global cached_releases, last_fetched_time
+    current_time = time.time()
+    
+    # Check if cache is still valid
+    if cached_releases and (current_time - last_fetched_time < CACHE_EXPIRATION_SECONDS):
+        print("Serving releases from server-side cache.")
+        return jsonify({
+            "status": "success",
+            "count": len(cached_releases),
+            "data": cached_releases,
+            "cached": True
+        })
+        
     try:
         # Fetch the release notes feed
         headers = {
@@ -114,12 +133,28 @@ def get_releases():
         # Parse and structure the data
         releases = parse_release_notes(response.content)
         
+        # Update cache
+        cached_releases = releases
+        last_fetched_time = current_time
+        
+        print("Cache refreshed from Google Cloud feed.")
         return jsonify({
             "status": "success",
             "count": len(releases),
-            "data": releases
+            "data": releases,
+            "cached": False
         })
     except requests.RequestException as e:
+        # Fallback to expired cache if we have one (very resilient UX)
+        if cached_releases:
+            print(f"Fetch failed: {e}. Serving stale cache.")
+            return jsonify({
+                "status": "success",
+                "count": len(cached_releases),
+                "data": cached_releases,
+                "cached": True,
+                "stale": True
+            })
         return jsonify({
             "status": "error",
             "message": f"Failed to fetch release notes: {str(e)}"
