@@ -41,6 +41,8 @@ config.py
 *.log
 *.sqlite
 *.db
+desktop.ini
+Desktop.ini
 
 # Application specific files to ignore
 PROMPT aplicado.txt

@@ -50,11 +50,17 @@ Una aplicación web moderna y de alto rendimiento construida con **Python Flask,
 
 La aplicación ya cuenta con un entorno virtual configurado (`venv`) en este workspace. Para ponerla en marcha de inmediato:
 
+#### Opción 1: Acceso rápido (Doble clic)
+En Windows, simplemente haz doble clic sobre el archivo **`iniciar.bat`**. Este script se encargará de levantar el servidor y abrir tu navegador automáticamente.
+
+#### Opción 2: Desde terminal
 1. Abre tu terminal de preferencia (PowerShell, Command Prompt o Bash) en este directorio.
 2. Ejecuta el backend de Flask iniciando el servidor:
 
    **En PowerShell (Windows):**
    ```powershell
+   .\iniciar.bat
+   # o bien:
    .\venv\Scripts\python.exe app.py
    ```
 

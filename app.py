@@ -1,6 +1,8 @@
 import os
 import re
+import threading
 import time
+import webbrowser
 import xml.etree.ElementTree as ET
 import requests
 from flask import Flask, jsonify, render_template, request
@@ -166,5 +168,13 @@ def get_releases():
         }), 500
 
 if __name__ == '__main__':
+    def open_browser():
+        webbrowser.open_new("http://127.0.0.1:5000")
+
+    # If debug is enabled, Werkzeug's reloader starts two processes.
+    # WERKZEUG_RUN_MAIN is set to 'true' only in the child process.
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
+        threading.Timer(1.25, open_browser).start()
+
     # Bind to all interfaces to make it accessible in local network if needed, port 5000
     app.run(debug=True, host='127.0.0.1', port=5000)
